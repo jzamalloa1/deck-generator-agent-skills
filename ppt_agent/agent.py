@@ -66,11 +66,13 @@ Be professional, helpful, and proactive in loading skills when tasks require spe
 # - list_presentations: Lightweight wrapper (calls external script)
 #
 # The actual implementation code in skills/scripts/ stays outside the agent's context
+#
+# NOTE: No checkpointer needed - LangGraph API handles persistence automatically
+# For local testing without langgraph dev, you can add: checkpointer=MemorySaver()
 graph = create_agent(
     model="gpt-5-nano",  # Using cost-effective GPT-5 nano model
     tools=[load_skill, create_presentation, list_presentations],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=MemorySaver(),  # Use MemorySaver for dev; PostgresSaver for production
 )
 
 
@@ -85,7 +87,7 @@ if __name__ == "__main__":
     print(f"  1. load_skill - Gateway to specialized skills")
     print(f"  2. create_presentation - Creates PowerPoint files")
     print(f"  3. list_presentations - Lists created files")
-    print(f"\nCheckpointer: {type(MemorySaver()).__name__}")
+    print(f"\nPersistence: Managed by LangGraph API")
     print("=" * 70)
     print("\n✓ Agent created successfully using LangChain's create_agent function")
     print("  Returns a compiled LangGraph StateGraph ready for deployment")
