@@ -42,6 +42,7 @@ output/
 
 # LangGraph
 .langgraph/
+.langgraph_api/
 
 # Jupyter Notebook
 .ipynb_checkpoints
