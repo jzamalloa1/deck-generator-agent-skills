@@ -1,7 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "agent": "./ppt_agent/agent.py:graph"
+    "agent": "./ppt_agent/agent.py:graph",
+    "test": "./test_simple_agent.py:graph"
   },
   "env": ".env"
 }
