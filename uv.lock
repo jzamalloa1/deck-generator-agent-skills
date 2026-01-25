@@ -302,19 +302,6 @@ wheels = [
 ]
 
 [[package]]
-name = "grpcio-health-checking"
-version = "1.76.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "grpcio" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/96/5a52dcf21078b47ffa0c2ed613c3153a06f138edb6133792bace5f1ccc1d/grpcio_health_checking-1.76.0.tar.gz", hash = "sha256:b7a99d74096b3ab3a59987fc02374068e1c180a352e8d1f79f10e5a23727098d", size = 16784, upload-time = "2025-10-21T16:28:55.204Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/e6/746dffa51399827e38bb3f3f1ad656a3d8c1255039b256a6f76593368768/grpcio_health_checking-1.76.0-py3-none-any.whl", hash = "sha256:9743f345a855ba030cc7c381361606870b79d33bb71d7756efa47b6faa970f81", size = 18910, upload-time = "2025-10-21T16:27:26.332Z" },
-]
-
-[[package]]
 name = "grpcio-tools"
 version = "1.75.1"
 source = { registry = "https://pypi.org/simple" }
@@ -567,13 +554,12 @@ wheels = [
 
 [[package]]
 name = "langgraph-api"
-version = "0.6.39"
+version = "0.6.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cloudpickle" },
     { name = "cryptography" },
     { name = "grpcio" },
-    { name = "grpcio-health-checking" },
     { name = "grpcio-tools" },
     { name = "httpx" },
     { name = "jsonschema-rs" },
@@ -582,7 +568,7 @@ dependencies = [
     { name = "langgraph-checkpoint" },
     { name = "langgraph-runtime-inmem" },
     { name = "langgraph-sdk" },
-    { name = "langsmith", extra = ["otel"] },
+    { name = "langsmith" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
@@ -598,9 +584,9 @@ dependencies = [
     { name = "uvicorn" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/52/f7d25b475768e5e0748d4725c64909fc7e56a714e064976a32e7c68f6d9e/langgraph_api-0.6.39.tar.gz", hash = "sha256:052191ec9c49d76b0d5592a60fe6324eafde40e7a1afba65d1ce11a6a074674b", size = 447880, upload-time = "2026-01-16T19:54:07.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/16/4e/2f0407e75cfc961b3c417b11afa5a580549be76c84e535a86251fa4929cb/langgraph_api-0.6.11.tar.gz", hash = "sha256:f1619fe9134f748aef4dc884503b7aad932ca5be5d8922e9bd6cc73bc341d41a", size = 417372, upload-time = "2025-12-20T07:47:23.333Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/a7/5ecccdc0e2a3900e08ac263b6e9cc6c5172c52ce3c4dda7750511e6fecc6/langgraph_api-0.6.39-py3-none-any.whl", hash = "sha256:50464c4983641c8b006a7f452583127ee2819806fc6d04844b08d5d3430df12e", size = 351764, upload-time = "2026-01-16T19:54:05.81Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/b6/5a4c4c2d51af9d8fafc4027c21b3af471c0485e3dbbda1ece59bcc49332b/langgraph_api-0.6.11-py3-none-any.whl", hash = "sha256:f0070d17d0582f357be7f2864769b34bd0285f25b1c039cc21c45de6a2ca16aa", size = 321751, upload-time = "2025-12-20T07:47:21.843Z" },
 ]
 
 [[package]]
@@ -651,7 +637,7 @@ wheels = [
 
 [[package]]
 name = "langgraph-runtime-inmem"
-version = "0.22.1"
+version = "0.20.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "blockbuster" },
@@ -661,9 +647,9 @@ dependencies = [
     { name = "starlette" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/8d/4b42a852a869c6a60aceae4e6157030c427ae9c07bf28769cc8e2fcec16b/langgraph_runtime_inmem-0.22.1.tar.gz", hash = "sha256:bbd983975dc372ad5cd5288263d3471732b0dff2bab3c6f41e5fe5b3a38ea1ee", size = 104172, upload-time = "2026-01-16T15:17:23.381Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/12/219cc68f58e69fe9a92518ae2563cbf20b118e1a6abb8827daafb26a83a2/langgraph_runtime_inmem-0.20.1.tar.gz", hash = "sha256:6ee918f0a839f3044cbed69580b44eb9cadf31a4771fc2e6d66842c7b7722fb0", size = 101516, upload-time = "2025-12-09T22:01:54.588Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/b2/336cb642ff4df29d46bb54e21b4ecbc6e2e38e606c1e3584d3ef67621c41/langgraph_runtime_inmem-0.22.1-py3-none-any.whl", hash = "sha256:2a04747db050cd7db878fb0c68fc7dbe8198ed71db35da323a27d1a7b2de3e97", size = 38291, upload-time = "2026-01-16T15:17:21.864Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/9c/b3883f862c46379bdd5fe4bd1eb8dce6c3897d7ec2d226b019e0866fad47/langgraph_runtime_inmem-0.20.1-py3-none-any.whl", hash = "sha256:27f4401372679c1132a31937524ca9fded071fc8e9a6cd5ac25e3860ebc8238b", size = 35183, upload-time = "2025-12-09T22:01:53.462Z" },
 ]
 
 [[package]]
@@ -696,13 +682,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e7/85/9c7933052a997da1b85bc5c774f3865e9b1da1c8d71541ea133178b13229/langsmith-0.6.4.tar.gz", hash = "sha256:36f7223a01c218079fbb17da5e536ebbaf5c1468c028abe070aa3ae59bc99ec8", size = 919964, upload-time = "2026-01-15T20:02:28.873Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/66/0f/09a6637a7ba777eb307b7c80852d9ee26438e2bdafbad6fcc849ff9d9192/langsmith-0.6.4-py3-none-any.whl", hash = "sha256:ac4835860160be371042c7adbba3cb267bcf8d96a5ea976c33a8a4acad6c5486", size = 283503, upload-time = "2026-01-15T20:02:26.662Z" },
-]
-
-[package.optional-dependencies]
-otel = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-sdk" },
 ]
 
 [[package]]
@@ -1048,6 +1027,7 @@ dependencies = [
     { name = "langchain-core" },
     { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "langgraph-api" },
     { name = "langgraph-cli", extra = ["inmem"] },
     { name = "langsmith" },
     { name = "python-dotenv" },
@@ -1075,6 +1055,7 @@ requires-dist = [
     { name = "langchain-core", specifier = ">=1.2.4" },
     { name = "langchain-openai", specifier = ">=1.1.6" },
     { name = "langgraph", specifier = ">=1.0.5" },
+    { name = "langgraph-api", specifier = "==0.6.11" },
     { name = "langgraph-cli", extras = ["inmem"], specifier = ">=0.4.11" },
     { name = "langsmith", specifier = ">=0.6.3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
