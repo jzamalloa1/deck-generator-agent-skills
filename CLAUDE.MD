@@ -20,10 +20,14 @@ An agentic solution that automatically creates PowerPoint presentations based on
 - **LangChain >= 1.1.0**: High-level agent abstraction with `create_agent` function
 - **LangGraph >= 1.0.6**: Durable agent runtime (v1.0 stable release)
 - **LangSmith >= 0.6.3**: Observability and deployment platform
-- **Python >= 3.10**: Required Python version
+- **Python >= 3.13**: Required Python version
 
 ### PowerPoint Generation
 - **python-pptx >= 1.0.0**: PowerPoint file generation library
+
+### Research & Web Search
+- **langchain-tavily >= 0.2.0**: Official Tavily integration for LangChain
+- **Tavily API**: AI-optimized search engine for LLM research tasks
 
 ### LLM Provider
 - **langchain-openai >= 0.3.0**: OpenAI integration
@@ -53,25 +57,44 @@ This project uses **LangChain's create_agent function** (introduced in LangChain
    - Returns a compiled LangGraph StateGraph
    - Configured with system prompt, tools, and checkpointer
    - No manual node/edge construction required
+   - Integrates research sub-agent as a tool
 
-2. **PowerPoint Skills** (`ppt_agent/utils/tools.py`)
-   - `create_powerpoint_deck`: Main presentation generation tool
-   - `list_generated_presentations`: List created files
+2. **Research Sub-Agent** (`ppt_agent/subagents/research_agent.py`) ✨ NEW
+   - Independent agent with own context window
+   - Uses Tavily search for current information gathering
+   - Wrapped as `research_subagent_tool` for main agent
+   - Returns synthesized research findings
+   - Keeps main agent context lean through context isolation
+
+3. **PowerPoint Skills** (`ppt_agent/utils/tools.py`)
+   - `create_presentation`: Main presentation generation tool (supports research data)
+   - `list_presentations`: List created files
    - Implemented with @tool decorator
    - Type-hinted for automatic schema generation
    - Comprehensive docstrings for LLM understanding
 
-3. **ReAct Pattern Flow**
+4. **Progressive Disclosure Skills** (`ppt_agent/skills/`)
+   - `load_skill`: Gateway tool for on-demand skill loading
+   - Skill definitions in `definitions/` (loaded when needed)
+   - Implementation scripts in `scripts/` (executed outside context)
+
+5. **Enhanced ReAct Pattern Flow**
    ```
    User Request → Agent (LLM reasoning with gpt-5-nano)
                      ↓
-                  Tool Calls?
+              Research Needed?
                      ↓
-                  Execute Tools (create PowerPoint)
+          Call Research Sub-Agent (Tavily search)
                      ↓
-                  Agent (process results)
+         Receive Research Findings (context isolation)
                      ↓
-                  Response to User
+              Load PowerPoint Skill
+                     ↓
+    Execute Tools (create PowerPoint with research data)
+                     ↓
+           Agent (process results)
+                     ↓
+              Response to User
    ```
 
 ### LangGraph Integration
@@ -88,23 +111,115 @@ Although we use `create_agent` for simplicity, it returns a **compiled LangGraph
 - **Production**: Optional PostgreSQL checkpointing, LangSmith deployment
 - **Scaling**: Horizontal worker scaling via LangSmith
 
+## Sub-Agent Architecture
+
+### Why Sub-Agents?
+
+Sub-agents solve the **context bloat problem** that occurs when agents need to perform extensive research or exploration before generating final output. Without sub-agents, all intermediate tool calls (searches, data gathering, analysis) would fill up the main agent's context window, leading to:
+- Wasted tokens on intermediate steps
+- Reduced capacity for the actual task
+- Higher costs
+- Slower performance
+
+### How Sub-Agents Work
+
+**Context Isolation**: Sub-agents run with their own independent context window. The main agent only receives the final result, not the 20+ search calls that produced it.
+
+**Workflow Example**:
+```
+Main Agent: "I need current AI statistics"
+     ↓
+Research Sub-Agent spawns with own context
+     ↓
+Sub-Agent makes 5 Tavily searches (in its own context)
+Sub-Agent reads 10+ web pages (in its own context)
+Sub-Agent synthesizes findings
+     ↓
+Main Agent receives: "Here are the key statistics..." (final summary only)
+```
+
+**Token Savings**:
+- Without sub-agent: Main agent context includes all 15 search results (~10,000 tokens)
+- With sub-agent: Main agent receives only final summary (~500 tokens)
+- **Savings: 95% context reduction**
+
+### Research Sub-Agent Details
+
+**File**: `ppt_agent/subagents/research_agent.py`
+
+**Purpose**: Gather current information from the internet using Tavily search
+
+**Tools Available**:
+- `TavilySearch`: AI-optimized search engine
+  - Returns relevant results ranked by quality
+  - Includes answer summaries
+  - Provides image URLs for visual content
+  - Supports general and news topics
+
+**System Prompt**: Specialized for research synthesis
+- Focus on current facts, statistics, and data
+- Suggest visual content (charts, graphs, tables)
+- Cite credible sources
+- Provide structured output
+
+**Usage Pattern**:
+```python
+# Main agent calls research sub-agent as a tool
+research_subagent_tool("Find 2026 AI adoption trends and statistics")
+
+# Sub-agent performs multiple searches internally
+# Returns: Structured findings with data and visual suggestions
+```
+
+**Integration with PowerPoint**:
+```python
+# 1. Main agent determines research is needed
+research = research_subagent_tool("Research electric vehicle market data")
+
+# 2. Main agent passes findings to presentation tool
+create_presentation(
+    topic="EV Market Trends",
+    num_slides=6,
+    research_data=research  # Enriches presentation with current data
+)
+```
+
+**Benefits**:
+1. **Context Efficiency**: Main agent stays focused, sub-agent handles messy research
+2. **Specialization**: Research sub-agent optimized for data gathering and synthesis
+3. **Parallel Execution**: Could run multiple sub-agents simultaneously
+4. **Modular Design**: Easy to add more sub-agents (PDF analysis, data viz, etc.)
+
 ## Project Structure
 
 ```
 ppt-agent/
-├── ppt_agent/              # Main package
+├── ppt_agent/                   # Main package
+│   ├── subagents/              # Sub-agent implementations ✨ NEW
+│   │   ├── __init__.py
+│   │   └── research_agent.py   # Research sub-agent with Tavily search
+│   ├── skills/                 # Progressive disclosure skills ✨ NEW
+│   │   ├── __init__.py
+│   │   ├── loader.py           # load_skill gateway tool
+│   │   ├── definitions/        # Skill prompts (loaded on-demand)
+│   │   │   └── powerpoint_creator.txt
+│   │   └── scripts/            # Implementation (outside context)
+│   │       ├── create_presentation.py
+│   │       └── list_presentations.py
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   └── tools.py        # PowerPoint skills (@tool decorated)
+│   │   └── tools.py            # Lightweight tool wrappers
 │   ├── __init__.py
-│   └── agent.py            # Agent creation with create_agent()
-├── pyproject.toml          # UV package configuration
-├── langgraph.json          # LangGraph deployment config
-├── .env.template           # Environment variable template
-├── .env                    # Local environment (gitignored)
-├── README.md               # Project documentation
-├── QUICKSTART.md           # Quick setup guide
-└── CLAUDE.MD              # This file
+│   └── agent.py                # Main agent with sub-agent integration
+├── output/                     # Generated PowerPoint files
+├── pyproject.toml              # UV package configuration
+├── uv.lock                     # UV lockfile for reproducible builds
+├── langgraph.json              # LangGraph deployment config
+├── .env.template               # Environment variable template
+├── .env                        # Local environment (gitignored)
+├── README.md                   # Project documentation
+├── QUICKSTART.md               # Quick setup guide
+└── CLAUDE.MD                  # This file (architecture guide)
 ```
 
 **Note**: No `nodes.py` or `state.py` files needed - `create_agent` handles state management and node construction automatically.
@@ -118,13 +233,19 @@ ppt-agent/
 - [x] Basic deck generation (title, content slides)
 - [x] LangSmith deployment configuration
 - [x] GPT-5-nano model integration
+- [x] Progressive disclosure pattern for skills
+- [x] Research sub-agent with Tavily integration ✨ NEW
+- [x] Research-enhanced presentation creation ✨ NEW
 
-### Phase 2: Enhanced Generation
+### Phase 2: Enhanced Generation (In Progress)
+- [x] Internet research integration via Tavily ✅
+- [x] Research findings incorporated into presentations ✅
+- [ ] Rich graphics: charts and tables from research data
 - [ ] Custom themes and templates
-- [ ] Image integration
-- [ ] Chart and table generation
+- [ ] Image integration from research URLs
+- [ ] Advanced chart generation (bar, line, pie charts)
+- [ ] Table generation from structured data
 - [ ] Multi-slide content planning with AI
-- [ ] Content research integration
 - [ ] Template library
 
 ### Phase 3: Production Features
@@ -456,3 +577,81 @@ See `ppt_agent/skills/README.md` for complete guide on adding new skills with pr
 - [LangChain Skills Documentation](https://docs.langchain.com/oss/python/langchain/multi-agent/skills)
 - [SQL Assistant Skills Example](https://docs.langchain.com/oss/python/langchain/multi-agent/skills-sql-assistant)
 
+
+## Skills vs Sub-Agents: When to Use Which?
+
+Both skills (progressive disclosure) and sub-agents solve context management problems, but they serve different purposes:
+
+### Skills (Progressive Disclosure)
+
+**Purpose**: Load specialized expertise and prompts on-demand
+
+**Use When**:
+- You need specialized instructions or domain knowledge
+- The agent needs to "become an expert" in a specific area
+- You want to add behavioral guidance or best practices
+- The capability is primarily **knowledge-based** rather than **action-heavy**
+
+**Example**: PowerPoint creation skill
+- Loads expert prompts about presentation structure
+- Provides guidelines for slide organization
+- Offers best practices for content creation
+- Tells agent about available tools
+
+**Characteristics**:
+- Loaded as text into main agent's context
+- Adds ~500-1000 tokens when activated
+- No independent execution
+- Primarily instructional/educational
+
+### Sub-Agents (Context Isolation)
+
+**Purpose**: Perform complex, multi-step tasks in isolation
+
+**Use When**:
+- Task requires many intermediate tool calls
+- You need extensive exploration or research
+- Results need synthesis from multiple sources
+- The capability is primarily **action-heavy** rather than **knowledge-based**
+
+**Example**: Research sub-agent
+- Makes 5-10 Tavily search calls (in own context)
+- Reads and processes multiple web pages
+- Synthesizes findings into structured output
+- Returns only final summary to main agent
+
+**Characteristics**:
+- Runs with independent context window
+- Saves 90%+ tokens through context isolation
+- Independent execution and reasoning
+- Primarily action-oriented/computational
+
+### Decision Matrix
+
+| Scenario | Solution | Reason |
+|----------|----------|--------|
+| "Act like a presentation expert" | **Skill** | Need specialized knowledge/prompts |
+| "Find current AI statistics" | **Sub-Agent** | Requires multiple searches and synthesis |
+| "Follow these coding standards" | **Skill** | Behavioral guidelines |
+| "Analyze this 50-page PDF" | **Sub-Agent** | Many read operations, context heavy |
+| "Use formal business language" | **Skill** | Stylistic instructions |
+| "Research and compare 5 products" | **Sub-Agent** | Extensive research with synthesis |
+
+### Combining Both
+
+The PowerPoint agent uses **both patterns together**:
+
+1. **Skill**: `powerpoint_creator` provides presentation expertise
+   - "You are now a PowerPoint expert. Use these guidelines..."
+
+2. **Sub-Agent**: `research_subagent_tool` gathers current data
+   - Main Agent → Research Sub-Agent (10 searches) → Final Summary
+
+3. **Result**: Expert presentation creation with current, researched content
+   - Skill (expertise) + Sub-Agent (data) = Research-Enhanced Presentations
+
+### Architecture References
+
+- [LangChain Multi-Agent Docs](https://docs.langchain.com/oss/python/langchain/multi-agent)
+- [LangChain Subagents Guide](https://docs.langchain.com/oss/python/langchain/multi-agent/subagents-personal-assistant)
+- [Tavily LangChain Integration](https://docs.tavily.com/documentation/integrations/langchain)

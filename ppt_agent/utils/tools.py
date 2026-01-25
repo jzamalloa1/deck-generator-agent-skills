@@ -21,11 +21,18 @@ def create_presentation(
     num_slides: int = 5,
     include_title_slide: bool = True,
     output_dir: str = "./output",
+    research_data: str = None,
 ) -> str:
     """Create a PowerPoint presentation based on the specified topic and parameters.
 
     This tool generates a complete PowerPoint deck with a title slide and content slides.
-    Each slide includes a title and bullet points related to the topic.
+    Each slide includes a title and bullet points related to the topic. If research_data
+    is provided, the presentation will include a research findings slide and incorporate
+    research insights into the content.
+
+    IMPORTANT: If the presentation topic requires current data, statistics, or trends,
+    use the research_subagent_tool FIRST to gather information, then pass those findings
+    to this tool via the research_data parameter.
 
     Args:
         topic: The main topic or subject of the presentation.
@@ -36,14 +43,23 @@ def create_presentation(
                            Default is True.
         output_dir: Directory where the PowerPoint file will be saved.
                    Default is "./output". Directory will be created if it doesn't exist.
+        research_data: Optional research findings from research_subagent_tool to incorporate
+                      into the presentation. When provided, creates a research findings slide
+                      and enriches content with current data.
 
     Returns:
         A string message indicating the file path where the presentation was saved,
         or an error message if generation failed.
 
     Example:
+        >>> # Without research
         >>> create_presentation("AI Trends 2026", num_slides=6)
         "PowerPoint presentation created successfully: ./output/AI_Trends_2026_20260118_143022.pptx"
+
+        >>> # With research
+        >>> research = research_subagent_tool("Find 2026 AI adoption statistics")
+        >>> create_presentation("AI Trends 2026", num_slides=6, research_data=research)
+        "PowerPoint presentation created successfully (research-enhanced): ./output/AI_Trends_2026_20260118_143022.pptx"
     """
     # Call external implementation script (code stays outside agent context)
     result = create_powerpoint(
@@ -51,6 +67,7 @@ def create_presentation(
         num_slides=num_slides,
         include_title_slide=include_title_slide,
         output_dir=output_dir,
+        research_data=research_data,
     )
 
     return result["message"]

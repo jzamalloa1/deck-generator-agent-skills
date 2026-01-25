@@ -16,8 +16,9 @@ def create_powerpoint(
     num_slides: int = 5,
     include_title_slide: bool = True,
     output_dir: str = "./output",
+    research_data: str = None,
 ) -> dict:
-    """Create a PowerPoint presentation.
+    """Create a PowerPoint presentation with optional research-enriched content.
 
     This function is called by the tool wrapper but its implementation
     stays outside the agent's context.
@@ -27,6 +28,7 @@ def create_powerpoint(
         num_slides: Number of content slides (excluding title)
         include_title_slide: Whether to include a title slide
         output_dir: Directory to save the file
+        research_data: Optional research findings to incorporate into slides
 
     Returns:
         Dictionary with success status, filepath, and message
@@ -63,11 +65,41 @@ def create_powerpoint(
             subtitle = slide.placeholders[1]
 
             title.text = topic
-            subtitle.text = f"Generated on {datetime.now().strftime('%B %d, %Y')}"
+            subtitle_text = f"Generated on {datetime.now().strftime('%B %d, %Y')}"
+            if research_data:
+                subtitle_text += " | Research-Enhanced Presentation"
+            subtitle.text = subtitle_text
 
         # Add content slides
         bullet_slide_layout = prs.slide_layouts[1]
 
+        # If research data is provided, add a research findings slide first
+        if research_data:
+            slide = prs.slides.add_slide(bullet_slide_layout)
+            shapes = slide.shapes
+            title_shape = shapes.title
+            title_shape.text = "Key Research Findings"
+
+            body_shape = shapes.placeholders[1]
+            text_frame = body_shape.text_frame
+
+            # Parse research data into bullet points
+            # Simple parsing: split by newlines and filter
+            research_lines = [line.strip() for line in research_data.split('\n') if line.strip() and not line.strip().startswith('#')]
+
+            if research_lines:
+                text_frame.text = research_lines[0]
+                for line in research_lines[1:8]:  # Limit to 8 bullets to avoid overcrowding
+                    if line and line != '**' and not line.startswith('**'):
+                        p = text_frame.add_paragraph()
+                        # Clean up markdown-style formatting
+                        clean_line = line.replace('**', '').replace('- ', '').replace('* ', '')
+                        p.text = clean_line
+                        p.level = 0 if line.startswith('-') or line.startswith('*') else 1
+            else:
+                text_frame.text = "Research findings incorporated throughout presentation"
+
+        # Add regular content slides
         for i in range(1, num_slides + 1):
             slide = prs.slides.add_slide(bullet_slide_layout)
             shapes = slide.shapes
@@ -79,13 +111,23 @@ def create_powerpoint(
             # Add content
             body_shape = shapes.placeholders[1]
             text_frame = body_shape.text_frame
-            text_frame.text = f"Key concept {i} related to {topic}"
 
-            # Add bullet points
-            for j in range(3):
+            if research_data:
+                text_frame.text = f"Key insight {i} related to {topic}"
+                # Add note that this slide can be customized with research findings
                 p = text_frame.add_paragraph()
-                p.text = f"Supporting detail {j + 1} for concept {i}"
+                p.text = "Incorporate specific research data and statistics here"
                 p.level = 1
+                p = text_frame.add_paragraph()
+                p.text = "Add visual suggestions: charts, graphs, or tables"
+                p.level = 1
+            else:
+                text_frame.text = f"Key concept {i} related to {topic}"
+                # Add bullet points
+                for j in range(3):
+                    p = text_frame.add_paragraph()
+                    p.text = f"Supporting detail {j + 1} for concept {i}"
+                    p.level = 1
 
         # Generate filename
         safe_topic = "".join(c if c.isalnum() or c.isspace() else "_" for c in topic)
