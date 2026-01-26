@@ -99,6 +99,38 @@ def create_powerpoint(
             else:
                 text_frame.text = "Research findings incorporated throughout presentation"
 
+        # Parse research data into usable sections if available
+        research_sections = []
+        if research_data:
+            # Split research data into sections (Key Findings, Visual Suggestions, Sources, etc.)
+            sections = research_data.split('**')
+            current_section = None
+            current_bullets = []
+
+            for section in sections:
+                section = section.strip()
+                if not section:
+                    continue
+
+                # Check if this is a section header
+                if 'Key Findings' in section or 'Visual Suggestions' in section or 'key findings' in section.lower():
+                    if current_section and current_bullets:
+                        research_sections.append({'title': current_section, 'bullets': current_bullets})
+                    current_section = section.replace(':', '').strip()
+                    current_bullets = []
+                else:
+                    # Extract bullet points from this section
+                    lines = [line.strip() for line in section.split('\n') if line.strip()]
+                    for line in lines:
+                        # Clean up markdown formatting
+                        cleaned = line.replace('- ', '').replace('* ', '').strip()
+                        if cleaned and not cleaned.startswith('http') and len(cleaned) > 10:
+                            current_bullets.append(cleaned)
+
+            # Add the last section
+            if current_section and current_bullets:
+                research_sections.append({'title': current_section, 'bullets': current_bullets})
+
         # Add regular content slides
         for i in range(1, num_slides + 1):
             slide = prs.slides.add_slide(bullet_slide_layout)
@@ -106,22 +138,34 @@ def create_powerpoint(
 
             # Set title
             title_shape = shapes.title
-            title_shape.text = f"{topic} - Point {i}"
 
             # Add content
             body_shape = shapes.placeholders[1]
             text_frame = body_shape.text_frame
 
-            if research_data:
-                text_frame.text = f"Key insight {i} related to {topic}"
-                # Add note that this slide can be customized with research findings
-                p = text_frame.add_paragraph()
-                p.text = "Incorporate specific research data and statistics here"
-                p.level = 1
-                p = text_frame.add_paragraph()
-                p.text = "Add visual suggestions: charts, graphs, or tables"
-                p.level = 1
+            if research_data and research_sections:
+                # Distribute research sections across slides
+                section_index = (i - 1) % len(research_sections)
+                section = research_sections[section_index]
+
+                # Set slide title based on section or topic
+                if len(research_sections) > 1 and section_index < len(research_sections):
+                    title_shape.text = f"{topic}: {section['title']}"
+                else:
+                    title_shape.text = f"{topic} - Key Points"
+
+                # Add bullets from research section
+                if section['bullets']:
+                    text_frame.text = section['bullets'][0]
+                    for bullet in section['bullets'][1:5]:  # Limit to 5 bullets per slide
+                        p = text_frame.add_paragraph()
+                        p.text = bullet
+                        p.level = 0
+                else:
+                    text_frame.text = f"Research insights related to {topic}"
             else:
+                # No research data - use generic content
+                title_shape.text = f"{topic} - Point {i}"
                 text_frame.text = f"Key concept {i} related to {topic}"
                 # Add bullet points
                 for j in range(3):
