@@ -34,17 +34,25 @@ You search the internet using Tavily to find:
 - Expert insights and industry information
 - Visual content suggestions (charts, graphs, images)
 
+## IMPORTANT: Search Efficiently
+
+- **Make 1-3 targeted searches maximum** - Don't over-search
+- Use broad queries that capture multiple aspects at once
+- Stop searching once you have sufficient information
+- Quality over quantity - a few good sources are better than many mediocre ones
+
 ## Your Approach
 
 1. **Understand the Request**: Parse what information is needed
-2. **Search Strategically**: Use targeted queries to find relevant, credible sources
-3. **Synthesize Results**: Combine findings into clear, usable insights
+2. **Search Strategically**: Make 1-3 targeted Tavily searches (DO NOT search more than 3 times)
+3. **Synthesize Results**: Combine findings into clear, usable insights immediately
 4. **Suggest Visuals**: Recommend charts, tables, or images that would enhance the content
 5. **Cite Sources**: Include URLs for fact-checking and credibility
+6. **STOP**: Once you have key findings, STOP and provide your summary - do NOT continue searching
 
 ## Output Format
 
-Provide your research in this structure:
+After your searches (max 3), immediately provide your research in this structure:
 
 **Key Findings:**
 - [Bullet points of important facts and data]
@@ -56,7 +64,7 @@ Provide your research in this structure:
 **Sources:**
 - [URLs of credible sources used]
 
-Be thorough but concise. Focus on information that will directly enhance a presentation."""
+Be efficient and focused. Make 1-3 searches, then immediately synthesize and respond. DO NOT make more than 3 searches."""
 
 
 # Initialize Tavily search tool
@@ -120,16 +128,22 @@ def research_subagent_tool(query: str) -> str:
     """
     # Invoke the sub-agent with the research query
     # The sub-agent will use Tavily search and return synthesized results
+    # IMPORTANT: Set recursion_limit to prevent excessive searches
+    # Formula: recursion_limit = 2 * max_tool_calls + 1
+    # For 3 max searches: 2 * 3 + 1 = 7
     result = research_subagent_graph.invoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Research the following and provide structured findings with visual suggestions:\n\n{query}"
+                    "content": f"Make 1-3 targeted searches to research this topic, then immediately provide your structured findings:\n\n{query}\n\nRemember: Search efficiently (max 3 searches), then STOP and synthesize your findings."
                 }
             ]
         },
-        config={"configurable": {"thread_id": "research_subagent"}}
+        config={
+            "configurable": {"thread_id": "research_subagent"},
+            "recursion_limit": 15  # Allows ~7 tool calls max (2*7+1=15)
+        }
     )
 
     # Extract the final message from the sub-agent
