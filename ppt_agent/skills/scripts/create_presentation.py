@@ -99,37 +99,38 @@ def create_powerpoint(
             else:
                 text_frame.text = "Research findings incorporated throughout presentation"
 
-        # Parse research data into usable sections if available
-        research_sections = []
+        # Parse research data into usable bullets for content slides
+        research_bullets = []
         if research_data:
-            # Split research data into sections (Key Findings, Visual Suggestions, Sources, etc.)
-            sections = research_data.split('**')
-            current_section = None
-            current_bullets = []
+            # Extract all meaningful bullet points from research data
+            # Split by lines and filter for actual content
+            lines = research_data.split('\n')
 
-            for section in sections:
-                section = section.strip()
-                if not section:
+            for line in lines:
+                line = line.strip()
+
+                # Skip empty lines, headers, and URLs
+                if not line or line.startswith('#') or line.startswith('http'):
                     continue
 
-                # Check if this is a section header
-                if 'Key Findings' in section or 'Visual Suggestions' in section or 'key findings' in section.lower():
-                    if current_section and current_bullets:
-                        research_sections.append({'title': current_section, 'bullets': current_bullets})
-                    current_section = section.replace(':', '').strip()
-                    current_bullets = []
-                else:
-                    # Extract bullet points from this section
-                    lines = [line.strip() for line in section.split('\n') if line.strip()]
-                    for line in lines:
-                        # Clean up markdown formatting
-                        cleaned = line.replace('- ', '').replace('* ', '').strip()
-                        if cleaned and not cleaned.startswith('http') and len(cleaned) > 10:
-                            current_bullets.append(cleaned)
+                # Skip section markers
+                if line.startswith('**') or line.endswith('**'):
+                    continue
 
-            # Add the last section
-            if current_section and current_bullets:
-                research_sections.append({'title': current_section, 'bullets': current_bullets})
+                # Clean up markdown bullet markers
+                cleaned = line
+                for marker in ['- ', '* ', '• ']:
+                    if cleaned.startswith(marker):
+                        cleaned = cleaned[len(marker):]
+
+                cleaned = cleaned.strip()
+
+                # Only keep substantial content (not section headers, not URLs)
+                if (len(cleaned) > 15 and
+                    not cleaned.lower().startswith(('key findings', 'visual suggestions', 'sources', 'key insight')) and
+                    not cleaned.startswith('http') and
+                    ':' not in cleaned[:30]):  # Likely a data point, not a header
+                    research_bullets.append(cleaned)
 
         # Add regular content slides
         for i in range(1, num_slides + 1):
@@ -138,34 +139,34 @@ def create_powerpoint(
 
             # Set title
             title_shape = shapes.title
+            title_shape.text = f"{topic} - Point {i}"
 
             # Add content
             body_shape = shapes.placeholders[1]
             text_frame = body_shape.text_frame
 
-            if research_data and research_sections:
-                # Distribute research sections across slides
-                section_index = (i - 1) % len(research_sections)
-                section = research_sections[section_index]
+            if research_data and research_bullets:
+                # Distribute research bullets across slides
+                # Calculate which bullets go on this slide (distribute evenly)
+                bullets_per_slide = max(3, len(research_bullets) // num_slides)
+                start_idx = (i - 1) * bullets_per_slide
+                end_idx = min(start_idx + bullets_per_slide, len(research_bullets))
 
-                # Set slide title based on section or topic
-                if len(research_sections) > 1 and section_index < len(research_sections):
-                    title_shape.text = f"{topic}: {section['title']}"
-                else:
-                    title_shape.text = f"{topic} - Key Points"
+                slide_bullets = research_bullets[start_idx:end_idx]
 
-                # Add bullets from research section
-                if section['bullets']:
-                    text_frame.text = section['bullets'][0]
-                    for bullet in section['bullets'][1:5]:  # Limit to 5 bullets per slide
+                if slide_bullets:
+                    # Add first bullet as main text
+                    text_frame.text = slide_bullets[0]
+                    # Add remaining bullets as paragraphs
+                    for bullet in slide_bullets[1:]:
                         p = text_frame.add_paragraph()
                         p.text = bullet
                         p.level = 0
                 else:
-                    text_frame.text = f"Research insights related to {topic}"
+                    # Fallback if no bullets for this slide
+                    text_frame.text = f"Additional insights related to {topic}"
             else:
                 # No research data - use generic content
-                title_shape.text = f"{topic} - Point {i}"
                 text_frame.text = f"Key concept {i} related to {topic}"
                 # Add bullet points
                 for j in range(3):
