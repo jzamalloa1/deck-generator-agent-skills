@@ -6,6 +6,7 @@ never enters the agent's context window (progressive disclosure).
 """
 
 import os
+import sys
 from datetime import datetime
 from pptx import Presentation
 from pptx.util import Inches
@@ -101,6 +102,13 @@ def create_powerpoint(
 
         # Parse research data into usable bullets for content slides
         research_bullets = []
+
+        # DEBUG: Log research_data state
+        print(f"[DEBUG] research_data received: {research_data is not None}", file=sys.stderr)
+        print(f"[DEBUG] research_data length: {len(research_data) if research_data else 0}", file=sys.stderr)
+        if research_data:
+            print(f"[DEBUG] research_data preview (first 200 chars): {research_data[:200]}", file=sys.stderr)
+
         if research_data:
             # Extract all meaningful bullet points from research data
             # Split by lines and filter for actual content
@@ -132,6 +140,11 @@ def create_powerpoint(
                     ':' not in cleaned[:30]):  # Likely a data point, not a header
                     research_bullets.append(cleaned)
 
+        # DEBUG: Log parsing results
+        print(f"[DEBUG] research_bullets extracted: {len(research_bullets)} bullets", file=sys.stderr)
+        if research_bullets:
+            print(f"[DEBUG] First 3 bullets: {research_bullets[:3]}", file=sys.stderr)
+
         # Add regular content slides
         for i in range(1, num_slides + 1):
             slide = prs.slides.add_slide(bullet_slide_layout)
@@ -144,6 +157,9 @@ def create_powerpoint(
             # Add content
             body_shape = shapes.placeholders[1]
             text_frame = body_shape.text_frame
+
+            # DEBUG: Log slide content decision
+            print(f"[DEBUG] Slide {i} - research_data exists: {research_data is not None}, research_bullets count: {len(research_bullets)}", file=sys.stderr)
 
             if research_data and research_bullets:
                 # Distribute research bullets across slides

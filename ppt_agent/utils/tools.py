@@ -25,14 +25,18 @@ def create_presentation(
 ) -> str:
     """Create a PowerPoint presentation based on the specified topic and parameters.
 
-    This tool generates a complete PowerPoint deck with a title slide and content slides.
-    Each slide includes a title and bullet points related to the topic. If research_data
-    is provided, the presentation will include a research findings slide and incorporate
-    research insights into the content.
+    ⚠️ WORKFLOW REQUIREMENT:
+    For topics about current events, recent data, statistics, or trends (like "2024 Olympics",
+    "2026 AI trends", etc.), you MUST follow this workflow:
 
-    IMPORTANT: If the presentation topic requires current data, statistics, or trends,
-    use the research_subagent_tool FIRST to gather information, then pass those findings
-    to this tool via the research_data parameter.
+    1. FIRST: Call research_subagent_tool(query="...") to gather current information
+    2. THEN: Call create_presentation(..., research_data=<result from step 1>)
+
+    Without research_data, presentations about current topics will have placeholder content!
+
+    This tool generates a complete PowerPoint deck with a title slide and content slides.
+    If research_data is provided, the presentation will include a research findings slide
+    and incorporate research insights into the content.
 
     Args:
         topic: The main topic or subject of the presentation.
