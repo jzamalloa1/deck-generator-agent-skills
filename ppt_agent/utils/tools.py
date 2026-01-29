@@ -23,20 +23,33 @@ def create_presentation(
     output_dir: str = "./output",
     research_data: str = None,
 ) -> str:
-    """Create a PowerPoint presentation based on the specified topic and parameters.
+    """Create a PowerPoint presentation with rich visual content (charts, tables, diagrams).
 
-    ⚠️ WORKFLOW REQUIREMENT:
-    For topics about current events, recent data, statistics, or trends (like "2024 Olympics",
-    "2026 AI trends", etc.), you MUST follow this workflow:
+    🎨 VISUAL CONTENT REQUIREMENT:
+    To include charts, tables, and diagrams in the presentation (which you ALWAYS should),
+    you MUST provide research_data with numerical information.
 
-    1. FIRST: Call research_subagent_tool(query="...") to gather current information
+    ⚠️ MANDATORY WORKFLOW for ALL presentations:
+
+    1. FIRST: Call research_subagent_tool(query="Find statistics, data, and numbers about [topic]")
+       - Request "statistics", "numbers", "comparisons", "data" in your query
+       - Example: "Find medal counts, participation statistics for 2024 Olympics"
+
     2. THEN: Call create_presentation(..., research_data=<result from step 1>)
 
-    Without research_data, presentations about current topics will have placeholder content!
+    ❌ WITHOUT research_data:
+       - Text-only slides (boring, unprofessional)
+       - No charts, no tables, no visual interest
+       - Placeholder content
 
-    This tool generates a complete PowerPoint deck with a title slide and content slides.
-    If research_data is provided, the presentation will include a research findings slide
-    and incorporate research insights into the content.
+    ✅ WITH research_data:
+       - Automatic bar charts (country comparisons, rankings, etc.)
+       - Automatic pie charts (distributions, percentages, breakdowns)
+       - Automatic tables (summary statistics, structured data)
+       - Professional, engaging, data-driven content
+
+    This tool generates a complete PowerPoint deck. When research_data is provided with
+    numerical information, it automatically creates visual content including charts and tables.
 
     Args:
         topic: The main topic or subject of the presentation.

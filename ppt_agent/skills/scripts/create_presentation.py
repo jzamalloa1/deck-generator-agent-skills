@@ -44,13 +44,37 @@ def extract_numbers_from_text(text):
             if country.strip() and total > 0:
                 chart_data.append((country.strip(), total))
 
-    # Pattern 3: "10,500 athletes" type stats
-    pattern3 = r'(\d+(?:,\d+)?)\s+(athletes?|countries?|nations?|events?|sports?|participants?)'
+    # Pattern 3: "10,500 athletes" or "4,448 GW" type stats
+    pattern3 = r'(\d+(?:[,\.]\d+)?)\s*([A-Z]{1,3})?[\s:]*(athletes?|countries?|nations?|events?|sports?|participants?|capacity|billion|million|thousand|GW|MW|TW|vehicles?|sales?)'
     matches = re.findall(pattern3, text, re.IGNORECASE)
-    for value, label in matches[:3]:  # Limit these type of stats
-        clean_value = int(value.replace(',', ''))
-        if clean_value > 0:
-            chart_data.append((label.capitalize(), clean_value))
+    for match in matches[:10]:
+        if len(match) == 3:
+            value_str, unit, label = match
+            try:
+                clean_value = float(value_str.replace(',', ''))
+                # Adjust for units
+                if unit and unit.upper() in ['TW']:
+                    clean_value = int(clean_value * 1000)  # TW to GW
+                    label = f"{label} (GW)"
+                elif clean_value >= 1 and clean_value < 1000000:
+                    chart_data.append((label.capitalize(), int(clean_value)))
+            except:
+                pass
+
+    # Pattern 4: "2022: $384.65 billion" or "China: 45%"
+    pattern4 = r'([A-Z][A-Za-z\s]+|20\d{2}):\s*(?:\$|€)?(\d+(?:[,\.]\d+)?)\s*(billion|million|%)?'
+    matches = re.findall(pattern4, text, re.IGNORECASE)
+    for label, value, unit in matches[:10]:
+        try:
+            clean_value = float(value.replace(',', ''))
+            if unit and 'billion' in unit.lower():
+                label = f"{label.strip()} ($B)"
+            elif unit and '%' in unit:
+                label = f"{label.strip()} (%)"
+            if clean_value > 0 and len(label.strip()) > 1:
+                chart_data.append((label.strip(), int(clean_value)))
+        except:
+            pass
 
     # Deduplicate by label (keep first occurrence)
     seen = set()
